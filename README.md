@@ -1,4 +1,5 @@
-Codes for our approach and other baselines.
+## Official code base for Federated CLIP for Resource-Efficient Heterogeneous Medical Image Classification (Accepted in AAAI 2026 Main track).
+### Author: Yihang Wu, Ahmad Chaddad.
 
 **Below we provide additional results (e.g., calibration) on BraTS, ICH and Prostate datasets. If it is not viewable, please go to images folder (it is a problem of Anonymous Github).**
 
