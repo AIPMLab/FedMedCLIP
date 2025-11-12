@@ -46,7 +46,7 @@ def main(Location, dataset, method):
     parser.add_argument('--step', type=float, default=0)
     parser.add_argument('--aggmode', type=str, default='att')
     parser.add_argument('--weight_decay', type=float, default=0.02)
-    parser.add_argument('--method', type=str, default='attn_mlp_tta')
+    parser.add_argument('--method', type=str, default='attn_mlp')
     parser.add_argument('--temp', type=float, default=0.5)
     parser.add_argument('--lr', type=float, default=5e-4, help='learning rate')
     parser.add_argument('--lr_mlp', type=float, default=1e-4)
