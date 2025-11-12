@@ -839,6 +839,8 @@ def train(args, model, data_loader, optimizer, device, testloader, mmd_loss, ser
 
                 loss_sim = (crkd_loss(similarities, outputs,T=2)
                             + crkd_loss(outputs, similarities,T=2)) / 2
+                # loss_sim = (alpha * crkd_loss(similarities, outputs,T=2)
+                #             + (1-alpha) * crkd_loss(outputs, similarities,T=2)) / 2
 
 
                 # pn_reg = population_norm_regularizer(model.fea_attn[1].mu, model.fea_attn[1].gamma_sq, norm_f)
