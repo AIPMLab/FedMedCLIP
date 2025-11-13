@@ -223,13 +223,8 @@ def freeze_param(model):
 ```
 
 
-
-
-
-
-
-
-
+### Contact
+If you have any questions, please contact us at wuyihang147258@gmail.com or ahmad8chaddad@gmail.com.
 
 
 
