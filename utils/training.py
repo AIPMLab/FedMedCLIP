@@ -785,9 +785,9 @@ def train(args, model, data_loader, optimizer, device, testloader, mmd_loss, ser
                 image = image.to(device)
                 text = text.to(device)
                 label = label.to(device)
-                # image_features = model.model.encode_image(image).float()
-                image_features = model.visual(image).float() # [B, 1152] for mambda
-                image_features = model.visual_projector(image_features).float() # [B, 512]
+                image_features = model.model.encode_image(image).float()
+                # image_features = model.visual(image).float() # [B, 1152] for mambda
+                # image_features = model.visual_projector(image_features).float() # [B, 512]
                 # print(image_features.shape)
                 norm_f = model.fea_attn[0](image_features)
                 text_features = model.model.encode_text(text).float()
