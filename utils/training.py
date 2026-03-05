@@ -7,7 +7,7 @@ import utils.clip_util as clu
 import torch.nn as nn
 import clip
 from utils.loss_function import CrossEntropyLabelSmooth
-from utils.clip_util import convert_models_to_fp32, distributed_sinkhorn
+from utils.clip_util import convert_models_to_fp32, distributed_sinkhorn, crkd_loss
 from utils.clip_util import FocalLossWithSmoothing, LinearDiscriminantLoss, FocalLoss
 from tqdm import tqdm
 from adaptation import CORAL
