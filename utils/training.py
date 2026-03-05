@@ -98,6 +98,14 @@ def totrain(model):
 def totrainMLP(mlp):
     mlp.train()
 
+def calculate_entropy_single(prob):
+    """
+    prob: (B, C) tensor, where B is batch size and C is number of classes
+    """
+    log_prob = F.log_softmax(prob, dim=1) 
+    entropy = -torch.sum(prob * log_prob, dim=1)
+    return entropy
+
 def train(args, model, data_loader, optimizer, device, testloader, mmd_loss, server_model, previous_nets, mlp):
     totrain(model)
     totrainMLP(mlp)
