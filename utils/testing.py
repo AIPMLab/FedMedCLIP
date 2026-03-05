@@ -16,7 +16,6 @@ from nets.PromptCLIP import PromptLearner_client, TextEncoder
 from nets.CoCoOpCLIP import TextEncoderCocoOp
 from torch.distributions import Categorical
 from utils.Plots import save_retention_curve_values
-from utils.tta import compute_sfea_loss,entropy_minimization_loss
 
 
 def toeval(model):
@@ -186,120 +185,6 @@ def test(args, model, data_loader, device, mlp, **kwargs):
                   .format(correct3 / total, correct / total, correct2 / total, args.alpha.mean().item(), entropy.mean().item(), entropy2.mean().item()))
             # print('Accuracy using MLP only (without Softmax): {:.4f}'.format(correct / total))
             # print('Accuracy using MLP and FAM: {:.4f}'.format(correct2 / total))
-        return correct2 / total, bacc, f1, precision, recall, net_benefits, tpr, fpr, net_benefits_all, net_benefits_none
-
-    elif args.method == 'attn_mlp_tta':
-        # TTA
-        clu.freeze_param_norm(mlp)
-        for e in range(0, 5):
-            for batch in (data_loader):
-                optimizer_tta = kwargs['optimizer_tta']
-                image, text, label = batch
-                image = image.to(device)
-                image_features = model.model.encode_image(image).float()
-                image_features_attn = model.fea_attn(image_features).float()
-                image_features = torch.mul(
-                    image_features_attn, image_features).float()
-
-                image_features = image_features / \
-                                 image_features.norm(dim=1, keepdim=True)
-
-                similarities = torch.mm(image_features, text_features.T)
-                logits_mlp = mlp(image_features)
-                # entropy = calculate_entropy_single(similarities)
-                # entropy2 = calculate_entropy_single(F.softmax(logits_mlp, dim=-1))
-                # w1 = 1.0 / (entropy + 1e-8)  # (B,)
-                # w2 = 1.0 / (entropy2 + 1e-8)  # (B,)
-                # w2_normalized = w2 / (w1 + w2)  # (B,)
-                # args.alpha = w2_normalized.unsqueeze(1)
-                # logits_ens = (1 - args.alpha) * similarities + args.alpha * logits_mlp
-                loss_tta = compute_sfea_loss(logits_mlp) + entropy_minimization_loss(logits_mlp)
-                optimizer_tta.zero_grad()
-                print(loss_tta)
-                loss_tta.backward()
-                optimizer_tta.step()
-
-        with torch.no_grad():
-            for batch in (data_loader):
-                image, text, label = batch
-                image = image.to(device)
-                image = clu.add_mixed_noise(image)
-                label = label.to(device)
-                image_features = clu.get_image_features(
-                    image, model.model, model.preprocess).float()
-                image_features_attn = model.fea_attn(image_features)
-                image_features = torch.mul(
-                    image_features_attn, image_features).detach()
-
-                similarity = clu.get_similarity(image_features, text_features)
-                _, indices3 = similarity.topk(1)
-                output = mlp(image_features)
-                _, indices = torch.max(output, dim=1)
-                # alpha = float(max(abs(entropy2 - 3), abs(entropy - 3)) / (abs(entropy2 - 3) + abs(entropy - 3)))
-                entropy = calculate_entropy_single(similarity)
-                entropy2 = calculate_entropy_single(F.softmax(output, dim=-1))
-                # args.alpha = float(max(abs(entropy2), abs(entropy)) / (abs(entropy2) + abs(entropy))) # Based on entropy
-                # args.alpha = ((entropy)) / ((entropy2) + (entropy))  # Based on entropy
-                w1 = 1.0 / (entropy + 1e-8)  # (B,)
-                w2 = 1.0 / (entropy2 + 1e-8)  # (B,)
-                w2_normalized = w2 / (w1 + w2)  # (B,)
-                args.alpha = w2_normalized.unsqueeze(1)
-                # args.alpha = (calculate_entropy(similarity) - torch.log(torch.tensor(len(model.labels), dtype=torch.float32)))  # Based on entropy
-                # print(similarity, output, (similarity + output) / 2)
-                output2 = (1-args.alpha) * similarity + args.alpha * F.softmax(output, dim=-1)
-                # output2 = F.softmax(output, dim=1)
-
-                _, indices2 = torch.max(output2, dim=1)
-
-                total += len(label)
-                pred = torch.squeeze(indices) # only local
-                pred2 = torch.squeeze(indices2) # combined
-                pred3 = torch.squeeze(indices3) # glo
-                res = torch.cat([pred.view(-1, 1), label.view(-1, 1)], dim=1)
-                res = res.cpu().numpy()
-                res2 = torch.cat([pred2.view(-1, 1), label.view(-1, 1)], dim=1)
-                res2 = res2.cpu().numpy()
-                res3 = torch.cat([pred3.view(-1, 1), label.view(-1, 1)], dim=1)
-                res3 = res3.cpu().numpy()
-
-                Prediction.append(output2.cpu().numpy())
-                # Prediction.append(F.softmax(output,dim=1).cpu().numpy())
-                Preds.append(pred2.cpu().numpy())
-                Label.append(label.cpu().numpy())
-                correct += np.sum(np.array(res)[:, 0] == np.array(res)[:, 1])
-                correct2 += np.sum(np.array(res2)[:, 0] == np.array(res2)[:, 1])
-                correct3 += np.sum(np.array(res3)[:, 0] == np.array(res3)[:, 1])
-            all_preds = np.concatenate(Prediction)
-            all_prediction = np.concatenate(Preds)
-            all_labels = np.concatenate(Label)
-
-            confs = all_preds[range(all_preds.shape[0]), all_prediction]
-            # confs = logits[range(logits.shape[0]), preds]
-            avg_conf = confs.mean()
-            print('avg batch conf:', avg_conf)
-            ece_value = ECE(confs, all_prediction, all_labels)
-            print('Overall ece value:', round(ece_value, 2))
-            # if os.path.exists('./CalibrationResults/miniDomainNet/CIPQRS/pFedCLIP++') == False:
-            #     os.makedirs('./CalibrationResults/miniDomainNet/CIPQRS/pFedCLIP++')
-            # plot_reliability_diagram(all_prediction, confs, all_labels, 10, None,
-            #                          './CalibrationResults/miniDomainNet/CIPQRS/pFedCLIP++/Client_local_' + str(
-            #                              args.index) + '_reliability_diagram.pdf')
-            # ####
-            # net_benefits = calculate_net_benefit_multiclass(all_labels, all_preds)
-            net_benefits = []
-            # tpr, fpr = roc(all_labels, all_preds)
-            # net_benefits_all = net_benefit_all(all_labels)
-            tpr = []
-            fpr = []
-            net_benefits_all = []
-            net_benefits_none = net_benefit_none()
-            bacc = balanced_accuracy_score(all_labels, all_prediction)
-            f1 = f1_score(all_labels, all_prediction, average='macro')
-            precision = precision_score(all_labels, all_prediction, average='macro')
-            recall = recall_score(all_labels, all_prediction, average='macro')
-            print('Accuracy using FAM only: {:.4f} |Accuracy using MLP only: {:.4f} |'
-                  ' Accuracy using FAM and MLP: {:.4f} | alpha: {:.2f} | entropy_FAM: {:.2f} | entropy_MLP: {:.2f}'
-                  .format(correct3 / total, correct / total, correct2 / total, args.alpha.mean().item(), entropy.mean().item(), entropy2.mean().item()))
         return correct2 / total, bacc, f1, precision, recall, net_benefits, tpr, fpr, net_benefits_all, net_benefits_none
 
     elif args.method == 'fedmlp' or args.method == 'CLIPFC':
