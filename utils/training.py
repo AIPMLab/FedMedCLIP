@@ -16,7 +16,6 @@ import numpy as np
 from torch.nn import KLDivLoss
 from nets.MLPs import ImageMlp, TextMlp
 import torch.nn.functional as F
-from utils.loss_function import MILoss
 from nets.LinearProbeV2 import compute_centroids,clip_classifier,compute_centroids_alpha,calculate_lr_alpha,calculate_init_alpha,calculate_lr_w
 import math
 from nets.CoCoOpCLIP import TextEncoderCocoOp
