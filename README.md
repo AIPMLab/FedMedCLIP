@@ -169,8 +169,8 @@ l1, l2, l3 = int(l*0.6), int(l*0.2), int(l*0.2), Line 263.
 
 ```sh
 if self.attention:
-  self.fea_attn = nn.Sequential(nn.Linear(image_features.shape[1], image_features.shape[1]), nn.InstanceNorm1d(image_features.shape[1]),nn.ReLU6(),
-  nn.Linear(image_features.shape[1], image_features.shape[1]),  nn.Softmax(dim=1)).to(self.device)
+  self.fea_attn = nn.Sequential(MaskedMLP(image_features.shape[1], image_features.shape[1]), nn.InstanceNorm1d(image_features.shape[1]),nn.ReLU6(),
+  MaskedMLP(image_features.shape[1], image_features.shape[1]),  nn.Softmax(dim=1)).to(self.device)
 ```
 
 Our MLP is defined in Line 225 as follows.
