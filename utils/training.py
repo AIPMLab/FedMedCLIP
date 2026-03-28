@@ -18,6 +18,7 @@ from nets.MLPs import ImageMlp, TextMlp
 import torch.nn.functional as F
 from nets.LinearProbeV2 import compute_centroids,clip_classifier,compute_centroids_alpha,calculate_lr_alpha,calculate_init_alpha,calculate_lr_w
 import math
+from nets.models import print_layer_keep_ratio
 from nets.CoCoOpCLIP import TextEncoderCocoOp
 
 lmmd_loss = LMMDLoss()
