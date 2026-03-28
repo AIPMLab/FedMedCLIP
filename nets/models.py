@@ -121,7 +121,7 @@ class ClipModelat(nn.Module):
             freeze_param(self.model)
 
         if self.attention:
-            self.fea_attn = nn.Sequential(MaskedMLP(image_features.shape[1], image_features.shape[1]), nn.BatchNorm1d(image_features.shape[1]),
+            self.fea_attn = nn.Sequential(MaskedMLP(image_features.shape[1], image_features.shape[1]), nn.InstanceNorm1d(image_features.shape[1]),
                            nn.ReLU(), MaskedMLP(image_features.shape[1], image_features.shape[1]), nn.Softmax(dim=1)).to(self.device)
             # self.fea_attn = Global_attention_block(image_features)
             # For FedClip
