@@ -592,7 +592,7 @@ def testlp(args, model, data_loader, device, mlp, text_weights, alpha_vec):
         for batch in (data_loader):
             image, text, label = batch
             images = image.to(device)
-            images = clu.add_mixed_noise(images)
+            # images = clu.add_mixed_noise(images)
             label = label.to(device)
             image_features = model.model.encode_image(images)
             image_features /= image_features.norm(dim=-1, keepdim=True)
@@ -622,7 +622,7 @@ def testlp(args, model, data_loader, device, mlp, text_weights, alpha_vec):
     # confs = logits[range(logits.shape[0]), preds]
     avg_conf = confs.mean()
     print('avg batch conf:', avg_conf)
-    ece_value = ECE(confs.cpu().detach().numpy(), logits_val.argmax(dim=1).cpu().detach().numpy(), logits_val.cpu().detach().numpy())
+    ece_value = ECE(confs.cpu().detach().numpy(), logits_val.argmax(dim=1).cpu().detach().numpy(), labels.cpu().numpy())
     print('Overall ece value:', round(ece_value, 2))
     if not os.path.exists('./CalibrationResults/miniDomainNet/CIPQRS/LP++/'):
         os.makedirs('./CalibrationResults/miniDomainNet/CIPQRS/LP++/')
